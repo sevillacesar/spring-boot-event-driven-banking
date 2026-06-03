@@ -46,7 +46,6 @@ Diseñado como ejemplo didáctico y plantilla para proyectos reales, cubre:
 - Apertura automática de cuentas al crear un cliente
 - Transferencias entre cuentas
 - Procesamiento de pagos externos
-- Detección de fraudes en tiempo real
 - Notificaciones automáticas
 - Trazabilidad distribuida con OpenTelemetry
 - Monitoreo con Prometheus + Grafana
@@ -70,7 +69,6 @@ graph TB
 
     subgraph "Event Consumers"
         NS[Notification Service]
-        FS[Fraud Detection Service]
     end
 
     subgraph "Monitoring"
@@ -85,15 +83,12 @@ graph TB
     PS -->|PaymentInitiated| K
 
     K -->|CustomerCreated| AS
-    K -->|TransactionInitiated| FS
     K -->|TransactionInitiated| NS
-    K -->|FraudAlert| NS
 
     CS -.->|metrics| P
     AS -.->|metrics| P
     TS -.->|metrics| P
     NS -.->|metrics| P
-    FS -.->|metrics| P
     PS -.->|metrics| P
 
     P --> G
@@ -110,9 +105,8 @@ graph TB
  2. Kafka (customer.created)          →  Account Service      →  Crea cuenta automáticamente
  3. Account Service                   →  Kafka (account.created)
  4. POST /api/v1/transactions/transfer →  Transaction Service  →  Kafka (transaction.initiated)
- 5. Kafka (transaction.initiated)     →  Fraud Detection      →  Analiza y alerta
- 6. Kafka (transaction.initiated)     →  Notification         →  Log de notificación
- 7. POST /api/v1/payments             →  Payment Service      →  Kafka (payment.initiated)
+ 5. Kafka (transaction.initiated)     →  Notification         →  Log de notificación
+ 6. POST /api/v1/payments             →  Payment Service      →  Kafka (payment.initiated)
  8. Payment Service                   →  Kafka (payment.processed)
 ```
 
@@ -256,8 +250,7 @@ spring-boot-event-driven-banking/
 │   ├── account-service/         # Gestión de cuentas
 │   ├── transaction-service/     # Procesamiento de transacciones
 │   ├── payment-service/         # Procesamiento de pagos
-│   ├── notification-service/    # Notificaciones
-│   └── fraud-detection-service/ # Detección de fraudes
+│   └── notification-service/    # Notificaciones
 ├── shared/                      # Eventos compartidos
 ├── kafka/
 │   ├── topics-config.sh
@@ -281,7 +274,6 @@ spring-boot-event-driven-banking/
 - [x] Customer Service (CRUD + eventos)
 - [x] Account Service (escucha eventos + CRUD)
 - [x] Transaction Service (eventos + CRUD)
-- [x] Fraud Detection Service (análisis en tiempo real)
 - [x] Notification Service (consumidor de eventos)
 - [x] Payment Service (procesamiento de pagos)
 - [x] Docker Compose completo

@@ -21,10 +21,5 @@ kafka-topics --bootstrap-server $BROKER --create --if-not-exists \
   --partitions 3 \
   --replication-factor 1
 
-kafka-topics --bootstrap-server $BROKER --create --if-not-exists \
-  --topic banking.fraud.alert \
-  --partitions 3 \
-  --replication-factor 1
-
 echo "Topics created successfully."
 kafka-topics --bootstrap-server $BROKER --list

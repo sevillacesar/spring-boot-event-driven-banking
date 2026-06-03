@@ -13,7 +13,7 @@ public class OpenApiConfig {
         return new OpenAPI()
             .info(new Info()
                 .title("Notification Service API")
-                .description("Real-time event notifications for transactions and fraud alerts")
+                .description("Real-time event notifications for transactions")
                 .version("1.0.0"));
     }
 }

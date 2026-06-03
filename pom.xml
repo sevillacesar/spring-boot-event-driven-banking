@@ -18,7 +18,6 @@
         <module>services/account-service</module>
         <module>services/transaction-service</module>
         <module>services/notification-service</module>
-        <module>services/fraud-detection-service</module>
         <module>services/payment-service</module>
     </modules>
 

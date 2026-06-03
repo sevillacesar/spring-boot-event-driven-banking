@@ -46,12 +46,6 @@ Manages external payment processing. Handles payment initiation, status tracking
 ### Notification Service (`:8083`)
 Consumes transaction events and logs/sends notifications. Currently implements logging-based notifications, ready to extend to email/SMS channels.
 
-### Fraud Detection Service
-Analyzes transactions in real-time for suspicious patterns:
-- **High-value threshold**: Flags transactions over $10,000 (MEDIUM severity)
-- **Self-transfer detection**: Detects transfers where source == target account (HIGH severity)
-- Extensible rule engine for adding new fraud patterns
-
 ## Event Flow
 
 ```
@@ -63,16 +57,8 @@ CustomerCreated --> Account Service
                         v
                   Transaction Initiated (via Transaction Service)
                         |
-                   -----+-----
-                   |          |
-                   v          v
-          Fraud Detection   Notification
-                   |
-                   v
-             Fraud Alert
-                   |
-                   v
-             Notification
+                        v
+                  Notification
 ```
 
 ## Observability Stack

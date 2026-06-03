@@ -72,30 +72,7 @@ public record TransactionEvent(
 ```
 
 **Produced by**: Transaction Service
-**Consumed by**: Fraud Detection, Notification
-
----
-
-## FraudAlertEvent
-
-Published when fraud detection finds a suspicious transaction.
-
-**Topic**: `fraud.alert`
-
-```java
-public record FraudAlertEvent(
-    String eventId,
-    String transactionId,
-    String accountId,
-    BigDecimal amount,
-    String reason,
-    FraudSeverity severity,  // LOW | MEDIUM | HIGH
-    Instant createdAt
-)
-```
-
-**Produced by**: Fraud Detection Service
-**Consumed by**: Notification Service
+**Consumed by**: Notification
 
 ---
 
@@ -150,7 +127,6 @@ public record PaymentProcessedEvent(
 |-------|----------|-----------|--------|
 | `customer.created` | Customer Service | Account Service | `CustomerCreatedEvent` |
 | `account.created` | Account Service | — | `AccountCreatedEvent` |
-| `transaction.initiated` | Transaction Service | Fraud Detection, Notification | `TransactionEvent` |
-| `fraud.alert` | Fraud Detection | Notification | `FraudAlertEvent` |
+| `transaction.initiated` | Transaction Service | Notification | `TransactionEvent` |
 | `payment.initiated` | Payment Service | — | `PaymentInitiatedEvent` |
 | `payment.processed` | Payment Service | — | `PaymentProcessedEvent` |
