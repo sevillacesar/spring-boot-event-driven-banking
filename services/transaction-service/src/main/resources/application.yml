@@ -1,0 +1,49 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: transaction-service
+  datasource:
+    url: jdbc:postgresql://localhost:5434/transaction_db
+    username: banking
+    password: banking123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    function:
+      definition: transactionInitiated
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        transactionInitiated-out-0:
+          destination: banking.transaction.initiated
+          content-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://transaction-db:5432/transaction_db
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka:29092

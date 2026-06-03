@@ -1,0 +1,43 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  cloud:
+    function:
+      definition: transactionInitiated;paymentInitiated;paymentProcessed
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        transactionInitiated-in-0:
+          destination: banking.transaction.initiated
+          group: notification-service
+          content-type: application/json
+        paymentInitiated-in-0:
+          destination: banking.payment.initiated
+          group: notification-service
+          content-type: application/json
+        paymentProcessed-in-0:
+          destination: banking.payment.processed
+          group: notification-service
+          content-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka:29092

@@ -1,0 +1,38 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: fraud-detection-service
+  cloud:
+    function:
+      definition: transactionInitiated;fraudAlert
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        transactionInitiated-in-0:
+          destination: banking.transaction.initiated
+          group: fraud-detection-service
+          content-type: application/json
+        fraudAlert-out-0:
+          destination: banking.fraud.alert
+          content-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka:29092

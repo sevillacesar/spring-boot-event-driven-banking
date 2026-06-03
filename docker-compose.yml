@@ -1,0 +1,175 @@
+version: "3.9"
+
+services:
+  # =============================================
+  # Infrastructure
+  # =============================================
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: banking-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: banking-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    container_name: banking-schema-registry
+    depends_on:
+      - kafka
+    ports:
+      - "8085:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+
+  # =============================================
+  # Databases
+  # =============================================
+
+  customer-db:
+    image: postgres:16-alpine
+    container_name: banking-customer-db
+    environment:
+      POSTGRES_DB: customer_db
+      POSTGRES_USER: banking
+      POSTGRES_PASSWORD: banking123
+    ports:
+      - "5432:5432"
+    volumes:
+      - customer-db-data:/var/lib/postgresql/data
+
+  account-db:
+    image: postgres:16-alpine
+    container_name: banking-account-db
+    environment:
+      POSTGRES_DB: account_db
+      POSTGRES_USER: banking
+      POSTGRES_PASSWORD: banking123
+    ports:
+      - "5433:5432"
+    volumes:
+      - account-db-data:/var/lib/postgresql/data
+
+  transaction-db:
+    image: postgres:16-alpine
+    container_name: banking-transaction-db
+    environment:
+      POSTGRES_DB: transaction_db
+      POSTGRES_USER: banking
+      POSTGRES_PASSWORD: banking123
+    ports:
+      - "5434:5432"
+    volumes:
+      - transaction-db-data:/var/lib/postgresql/data
+
+  payment-db:
+    image: postgres:16-alpine
+    container_name: banking-payment-db
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: banking
+      POSTGRES_PASSWORD: banking123
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+
+  # =============================================
+  # Services
+  # =============================================
+
+  customer-service:
+    build:
+      context: .
+      dockerfile: services/customer-service/Dockerfile
+    container_name: banking-customer
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - customer-db
+      - kafka
+      - schema-registry
+
+  account-service:
+    build:
+      context: .
+      dockerfile: services/account-service/Dockerfile
+    container_name: banking-account
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - account-db
+      - kafka
+      - schema-registry
+
+  transaction-service:
+    build:
+      context: .
+      dockerfile: services/transaction-service/Dockerfile
+    container_name: banking-transaction
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - transaction-db
+      - kafka
+      - schema-registry
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: banking-notification
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - kafka
+      - schema-registry
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    container_name: banking-payment
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - payment-db
+      - kafka
+      - schema-registry
+
+volumes:
+  customer-db-data:
+  account-db-data:
+  transaction-db-data:
+  payment-db-data:

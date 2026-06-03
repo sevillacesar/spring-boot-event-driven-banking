@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.58
+    container_name: banking-jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    networks:
+      - default
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: banking-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - default
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: banking-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - default
+
+networks:
+  default:
+    name: spring-boot-event-driven-banking_default
+    external: true
