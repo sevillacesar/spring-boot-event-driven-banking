@@ -38,13 +38,14 @@
 
 ## Descripción
 
-**Event-Driven Banking** es un sistema bancario completo basado en **arquitectura event-driven** con 5 microservicios independientes que se comunican asincrónicamente a través de **Apache Kafka**.
+**Event-Driven Banking** es un sistema bancario completo basado en **arquitectura event-driven** con 6 microservicios independientes que se comunican asincrónicamente a través de **Apache Kafka**.
 
 Diseñado como ejemplo didáctico y plantilla para proyectos reales, cubre:
 
 - Creación de clientes bancarios
 - Apertura automática de cuentas al crear un cliente
 - Transferencias entre cuentas
+- Procesamiento de pagos externos
 - Detección de fraudes en tiempo real
 - Notificaciones automáticas
 - Trazabilidad distribuida con OpenTelemetry
@@ -60,6 +61,7 @@ graph TB
         A[Customer API] -->|REST| CS[Customer Service]
         B[Account API] -->|REST| AS[Account Service]
         C[Transaction API] -->|REST| TS[Transaction Service]
+        PAPI[Payment API] -->|REST| PS[Payment Service]
     end
 
     subgraph "Event Broker"
@@ -80,6 +82,7 @@ graph TB
     CS -->|CustomerCreated| K
     AS -->|AccountCreated| K
     TS -->|TransactionInitiated| K
+    PS -->|PaymentInitiated| K
 
     K -->|CustomerCreated| AS
     K -->|TransactionInitiated| FS
@@ -91,22 +94,26 @@ graph TB
     TS -.->|metrics| P
     NS -.->|metrics| P
     FS -.->|metrics| P
+    PS -.->|metrics| P
 
     P --> G
     CS -.->|traces| J
     AS -.->|traces| J
     TS -.->|traces| J
+    PS -.->|traces| J
 ```
 
 ### Flujo de datos
 
 ```
-1. POST /api/v1/customers  →  Customer Service  →  Kafka (customer.created)
-2. Kafka (customer.created) →  Account Service  →  Crea cuenta automáticamente
-3. Account Service  →  Kafka (account.created)
-4. POST /api/v1/transactions/transfer  →  Transaction Service  →  Kafka (transaction.initiated)
-5. Kafka (transaction.initiated) →  Fraud Detection  →  Analiza y alerta
-6. Kafka (transaction.initiated) →  Notification  →  Log de notificación
+ 1. POST /api/v1/customers            →  Customer Service     →  Kafka (customer.created)
+ 2. Kafka (customer.created)          →  Account Service      →  Crea cuenta automáticamente
+ 3. Account Service                   →  Kafka (account.created)
+ 4. POST /api/v1/transactions/transfer →  Transaction Service  →  Kafka (transaction.initiated)
+ 5. Kafka (transaction.initiated)     →  Fraud Detection      →  Analiza y alerta
+ 6. Kafka (transaction.initiated)     →  Notification         →  Log de notificación
+ 7. POST /api/v1/payments             →  Payment Service      →  Kafka (payment.initiated)
+ 8. Payment Service                   →  Kafka (payment.processed)
 ```
 
 ---
@@ -210,6 +217,14 @@ curl -X POST http://localhost:8082/api/v1/transactions/transfer \
 | `GET` | `/api/v1/transactions/{id}` | Obtener transacción |
 | `GET` | `/api/v1/transactions/account/{accountId}` | Transacciones por cuenta |
 
+### Payment Service (:8084)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `POST` | `/api/v1/payments` | Iniciar pago |
+| `GET` | `/api/v1/payments` | Listar pagos |
+| `GET` | `/api/v1/payments/{id}` | Obtener pago |
+
 ---
 
 ## Monitoreo
@@ -240,18 +255,21 @@ spring-boot-event-driven-banking/
 │   ├── customer-service/        # Gestión de clientes
 │   ├── account-service/         # Gestión de cuentas
 │   ├── transaction-service/     # Procesamiento de transacciones
+│   ├── payment-service/         # Procesamiento de pagos
 │   ├── notification-service/    # Notificaciones
 │   └── fraud-detection-service/ # Detección de fraudes
-├── docker/
-│   ├── docker-compose.yml
-│   └── docker-compose.monitoring.yml
+├── shared/                      # Eventos compartidos
 ├── kafka/
-│   └── topics-config.sh
+│   ├── topics-config.sh
+│   └── schemas/
 ├── monitoring/
 │   ├── prometheus/prometheus.yml
 │   └── grafana/dashboards/
+├── docker-compose.yml
+├── docker-compose.monitoring.yml
 ├── .github/workflows/
 │   └── ci.yml
+├── docs/
 ├── README.md
 └── pom.xml
 ```
@@ -265,6 +283,7 @@ spring-boot-event-driven-banking/
 - [x] Transaction Service (eventos + CRUD)
 - [x] Fraud Detection Service (análisis en tiempo real)
 - [x] Notification Service (consumidor de eventos)
+- [x] Payment Service (procesamiento de pagos)
 - [x] Docker Compose completo
 - [x] OpenTelemetry tracing
 - [x] Prometheus + Grafana
