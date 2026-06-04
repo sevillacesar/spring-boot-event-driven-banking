@@ -59,6 +59,7 @@ class TransactionServiceApplicationTests {
     @Test
     void shouldCreateTransfer() {
         var request = Map.of(
+            "idempotencyKey", "txn-001",
             "sourceAccountId", "source-123",
             "targetAccountId", "target-456",
             "amount", 500.00,
@@ -78,9 +79,11 @@ class TransactionServiceApplicationTests {
     @Test
     void shouldCreateMultipleTransfers() {
         var txn1 = Map.of(
+            "idempotencyKey", "txn-002",
             "sourceAccountId", "src-1", "targetAccountId", "tgt-1",
             "amount", 100.00, "currency", "USD", "description", "First");
         var txn2 = Map.of(
+            "idempotencyKey", "txn-003",
             "sourceAccountId", "src-2", "targetAccountId", "tgt-2",
             "amount", 200.00, "currency", "EUR", "description", "Second");
 
@@ -93,6 +96,7 @@ class TransactionServiceApplicationTests {
     @Test
     void shouldGetTransactionById() {
         var request = Map.of(
+            "idempotencyKey", "txn-004",
             "sourceAccountId", "src-get",
             "targetAccountId", "tgt-get",
             "amount", 1000.00,
