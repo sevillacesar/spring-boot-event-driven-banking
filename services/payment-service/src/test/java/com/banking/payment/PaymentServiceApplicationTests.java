@@ -121,6 +121,7 @@ class PaymentServiceApplicationTests {
     @Test
     void shouldProcessPayment() {
         var payment = new Payment();
+        payment.setIdempotencyKey("idem-process-2");
         payment.setSourceAccountId("acc-456");
         payment.setAmount(new BigDecimal("250.00"));
         payment.setCurrency("USD");
