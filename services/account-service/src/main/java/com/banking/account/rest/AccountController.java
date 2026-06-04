@@ -2,6 +2,7 @@ package com.banking.account.rest;
 
 import com.banking.account.domain.Account;
 import com.banking.account.domain.AccountRepository;
+import com.banking.account.event.AccountEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,15 +10,19 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
 
     private final AccountRepository accountRepository;
+    private final AccountEventPublisher eventPublisher;
+    private final Random random = new Random();
 
-    public AccountController(AccountRepository accountRepository) {
+    public AccountController(AccountRepository accountRepository, AccountEventPublisher eventPublisher) {
         this.accountRepository = accountRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @GetMapping("/{id}")
@@ -35,6 +40,34 @@ public class AccountController {
     @GetMapping
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
+    }
+
+    @PostMapping
+    public ResponseEntity<Account> createAccount(@RequestBody Map<String, Object> request) {
+        var account = new Account();
+        account.setCustomerId((String) request.get("customerId"));
+        account.setAccountNumber(generateAccountNumber());
+        account.setAccountType(
+            request.containsKey("accountType")
+                ? Account.AccountType.valueOf((String) request.get("accountType"))
+                : Account.AccountType.CHECKING
+        );
+        account.setBalance(BigDecimal.ZERO);
+        account.setCurrency((String) request.getOrDefault("currency", "USD"));
+        account.setActive(true);
+
+        accountRepository.save(account);
+        eventPublisher.publishAccountCreated(account);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(account);
+    }
+
+    private String generateAccountNumber() {
+        var sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            sb.append(random.nextInt(10));
+        }
+        return sb.toString();
     }
 
     @PostMapping("/{id}/deposit")

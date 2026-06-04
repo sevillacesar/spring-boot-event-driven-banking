@@ -120,6 +120,24 @@ class AccountServiceApplicationTests {
     }
 
     @Test
+    void shouldCreateAccount() {
+        var request = Map.of(
+            "customerId", "new-cust",
+            "accountType", "SAVINGS",
+            "currency", "USD"
+        );
+
+        var response = restTemplate.postForEntity("/api/v1/accounts", request, Account.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCustomerId()).isEqualTo("new-cust");
+        assertThat(response.getBody().getAccountType()).isEqualTo(Account.AccountType.SAVINGS);
+        assertThat(response.getBody().getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.getBody().isActive()).isTrue();
+    }
+
+    @Test
     void shouldGetAccountsByCustomer() {
         var account1 = new Account();
         account1.setCustomerId("cust-group");

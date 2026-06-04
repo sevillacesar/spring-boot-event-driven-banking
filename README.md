@@ -199,9 +199,11 @@ curl -X POST http://localhost:8082/api/v1/transactions/transfer \
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
+| `POST` | `/api/v1/accounts` | Crear cuenta (adicional) |
 | `GET` | `/api/v1/accounts` | Listar cuentas |
 | `GET` | `/api/v1/accounts/{id}` | Obtener cuenta |
 | `GET` | `/api/v1/accounts/customer/{customerId}` | Cuentas por cliente |
+| `POST` | `/api/v1/accounts/{id}/deposit` | Depositar fondos |
 
 ### Transaction Service (:8082)
 
