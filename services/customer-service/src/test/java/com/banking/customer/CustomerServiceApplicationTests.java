@@ -22,6 +22,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 class CustomerServiceApplicationTests {
 
+    static DockerImageName postgresImage = DockerImageName.parse("postgres:16-alpine");
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(postgresImage)
+        .withDatabaseName("test_db")
+        .withUsername("test")
+        .withPassword("test");
+
+    @Container
+    static KafkaContainer kafka = new KafkaContainer(
+        DockerImageName.parse("confluentinc/cp-kafka:7.6.1"));
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.cloud.stream.kafka.binder.brokers", kafka::getBootstrapServers);
+    }
+
     @Autowired
     private TestRestTemplate restTemplate;
 
