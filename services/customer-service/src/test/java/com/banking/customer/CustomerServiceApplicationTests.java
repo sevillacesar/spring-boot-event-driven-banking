@@ -2,6 +2,7 @@ package com.banking.customer;
 
 import com.banking.customer.domain.CustomerRepository;
 import com.banking.customer.dto.CreateCustomerRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,31 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 class CustomerServiceApplicationTests {
 
-    static DockerImageName postgresImage = DockerImageName.parse("postgres:16-alpine");
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(postgresImage)
-        .withDatabaseName("test_db")
-        .withUsername("test")
-        .withPassword("test");
-
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.6.1"));
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.cloud.stream.kafka.binder.brokers", kafka::getBootstrapServers);
-    }
-
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    @BeforeEach
+    void cleanUp() {
+        customerRepository.deleteAll();
+    }
 
     @Test
     void shouldCreateCustomer() {
